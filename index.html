@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Embedded EGF 1.1 Reader</title>
+  <link rel="icon" type="image/png" href="./egf_logo.png" id="appFavicon" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+<header>
+  <div class="left">
+    <div class="brand" aria-label="Application">
+      <img
+        class="brandLogo"
+        src="./egf_logo.png"
+        alt="Logo EGF"
+        width="140"
+        height="40"
+        decoding="async"
+      />
+    </div>
+  </div>
+
+  <div class="headerActions">
+    <div class="actionBar" id="actionBar">
+      <button class="btn secondary" id="btnPause" disabled title="Pause the game / Resume the game" aria-label="Pause / Resume">
+        <span class="btnIcon" aria-hidden="true">⏸</span>
+        <span class="btnLabel">Pause</span>
+      </button>
+
+      <button class="btn secondary" id="btnScore" disabled title="View score" aria-label="Score">
+        <span class="btnIcon" aria-hidden="true">🏆</span>
+        <span class="btnLabel">Score</span>
+      </button>
+
+      <button class="btn secondary" id="btnAbout" title="View game info" aria-label="About the game">
+        <span class="btnIcon" aria-hidden="true">ℹ️</span>
+        <span class="btnLabel">About the game</span>
+      </button>
+
+      <button class="btn secondary" id="btnSettings" title="Open Settings" aria-label="Settings">
+        <span class="btnIcon" aria-hidden="true">⚙️</span>
+        <span class="btnLabel">Settings</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<main>
+ <section class="card">
+  <div class="hd">
+    <div class="sceneTitle" style="min-width:0">
+      <div class="t" id="sceneName">Built-in game</div>
+      <div class="s" id="sceneSub">The game loads automatically.</div>
+    </div>
+
+    <div class="progress" id="rolePill" style="display:none" title="Game progression">
+      <span id="roleProgressText">0%</span>
+      <span class="bar"><i id="roleBarFill"></i></span>
+    </div>
+  </div>
+
+  <div class="sceneWrap" id="sceneWrap">
+    <div class="pauseOverlay" id="pauseOverlay" aria-hidden="true">
+      <div class="pausePanel">
+        <h3>⏸ Game paused</h3>
+        <p>Audio and video are paused, and interactions are disabled.</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn good" id="btnResumeOverlay">▶ Resume</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content" id="sceneContent">
+      <div class="textBlock muted">Loading the bundled .egf file...</div>
+    </div>
+
+    <div class="footerActions" id="sceneFooter"></div>
+  </div>
+</section>
+</main>
+
+<div id="aboutModal" class="modal" aria-hidden="true">
+  <div class="backdrop" id="aboutBackdrop"></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-label="About the game">
+    <div class="panelHd">
+      <div class="title">
+        <span>ℹ️ About the game</span>
+      </div>
+      <div class="row">
+        <button class="btn secondary" id="btnCloseAbout" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="panelBd">
+      <div class="notice" id="warnings" style="display:none"></div>
+
+      <div class="aboutCoverWrap" id="aboutCoverWrap">
+        <img id="aboutCover" class="aboutCoverImg" alt="EGF cover">
+      </div>
+
+      <div class="notice neutral">
+        <div class="kv" style="margin-top:0">
+          <div class="k">Game name</div><div class="v" id="kvTitle">—</div>
+          <div class="k">Creator</div><div class="v" id="kvCreator">—</div>
+          <div class="k">Description</div><div class="v" id="kvDesc">—</div>
+          <div class="k">Creation / publication date</div><div class="v" id="kvDate">—</div>
+          <div class="k">Last modified date</div><div class="v" id="kvModified">—</div>
+          <div class="k">EGF Version</div><div class="v" id="kvVer">—</div>
+        </div>
+      </div>
+
+      <div class="settingsRow" id="aboutDownloadRow">
+        <div class="left">
+          <div class="name">Download EGF</div>
+          <div class="hint">Download the currently loaded .egf package.</div>
+        </div>
+        <div class="right">
+          <button class="btn secondary" id="btnDownloadEgf" disabled title="Download EGF file">
+            Download EGF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="settingsModal" class="modal" aria-hidden="true">
+  <div class="backdrop" id="settingsBackdrop"></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Audio settings">
+    <div class="panelHd">
+      <div class="title">
+        <span>⚙️ Settings</span>
+      </div>
+      <div class="row">
+        <button class="btn secondary" id="btnCloseSettings" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="panelBd">
+      <div class="settingsGrid">
+
+        <div class="settingsRow">
+          <div class="left">
+            <div class="name">Background volume</div>
+            <div class="hint">Controls background sounds (background audio).</div>
+          </div>
+          <div class="right">
+            <input id="bgVol" type="range" min="0" max="100" step="1" value="75" />
+            <div class="pct" id="bgVolPct">75%</div>
+            <label class="toggle" title="Mute/unmute background audio">
+              <input id="bgMute" type="checkbox" />
+              <span>Mute</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settingsRow">
+          <div class="left">
+            <div class="name">Foreground audio volume</div>
+            <div class="hint">Controls foreground sounds (foreground audio).</div>
+          </div>
+          <div class="right">
+            <input id="fgVol" type="range" min="0" max="100" step="1" value="100" />
+            <div class="pct" id="fgVolPct">100%</div>
+            <label class="toggle" title="Mute/unmute foreground audios">
+              <input id="fgMute" type="checkbox" />
+              <span>Mute</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settingsRow">
+          <div class="left">
+            <div class="name">Theme</div>
+            <div class="hint">Toggle between dark mode and light mode.</div>
+          </div>
+          <div class="right">
+            <label class="toggle" title="Toggle dark/light mode">
+              <input id="themeToggle" type="checkbox" />
+              <span>Dark mode</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settingsRow">
+          <div class="left">
+            <div class="name" id="langLabel">Language</div>
+            <div class="hint" id="langHint">Choose the interface language.</div>
+          </div>
+          <div class="right">
+            <label class="toggle" title="Toggle language">
+              <select id="langSelect" class="textInput" style="max-width:260px">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="pt">Português</option>
+                <option value="zh">中文（普通话）</option>
+                <option value="ar">العربية (الفصحى الحديثة)</option>
+                <option value="hi">हिंदी</option>
+                <option value="ur">اردو</option>
+                <option value="ru">Русский</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="settingsRow">
+          <div class="left">
+            <div class="name">Reset</div>
+            <div class="hint">Reset the session (score, progress) and return to the title screen.</div>
+          </div>
+          <div class="right">
+            <button class="btn secondary" id="btnReset" disabled title="Reset session">Reset</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="settingsFooter">
+        <div id="poweredBy" class="poweredByText">Powered by Embedded EGF 1.1 Reader</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="scoreModal" class="modal" aria-hidden="true">
+  <div class="backdrop" id="scoreBackdrop"></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Score and debug">
+    <div class="panelHd">
+      <div class="title">
+        <span>🏆 Score</span>
+      </div>
+      <div class="row">
+        <button class="btn secondary" id="btnCloseScore" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="panelBd">
+      <div class="notice neutral">
+        <div class="kv" style="margin-top:0">
+          <div class="k">Current scene</div><div class="v" id="kvCurrentScene">—</div>
+          <div class="k">Current scene ID</div><div class="v" id="kvCurrentSceneId">—</div>
+          <div class="k">Current scene role</div><div class="v" id="kvCurrentRole">—</div>
+          <div class="k">Wrong answers count</div><div class="v" id="kvWrong">—</div>
+          <div class="k">Game progression</div>
+          <div class="v">
+            <span id="scoreProgressPct" class="progressPct">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./jszip.min.js"></script>
+<script src="./i18n.js"></script>
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+
+</body>
+</html>
